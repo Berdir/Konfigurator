@@ -5,7 +5,7 @@
  * Implements hook_menu().
  */
 function zigpad_export_menu() {
-  $items['zigpad/config'] = array(
+  $items['1/zigpad/config.xml'] = array(
     'title' => 'Zigpad Export',
     'page callback' => 'zigpad_export_config',
     'access callback' => TRUE,
@@ -13,10 +13,75 @@ function zigpad_export_menu() {
   return $items;
 }
 
-
+/**
+ * Page callback for zigpad export.
+ */
 function zigpad_export_config() {
 
-  $xml = new SimpleXMLElement('<?xml version="1.0" ?><config created="2001-12-31T12:00:00" xmlns:tns="http://www.example.org/AMoCoConfig/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.example.org/AMoCoConfig/config.xsd"></config>');
+  $schema_url = url('zigpad/schema.xml', array('absolute' => TRUE));
+
+  $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><config xmlns="' . $schema_url . '"></config>');
+
+  // Add actions to XML.
+  $anids = db_query("SELECT nid FROM {node} WHERE type LIKE '%_action'")->fetchCol();
+  $actions = $xml->addChild('actions');
+  foreach (node_load_multiple($anids) as $node) {
+    $action = $actions->addChild('action');
+    $type = substr($node->type, 0, strpos($node->type, '_action'));
+    $action->addAttribute('id', $node->nid);
+    $action->addAttribute('name', $node->title);
+    $action->addAttribute('type', $type);
+    $favorite = field_get_items('node', $node, 'field_favorite');
+    $action->addAttribute('favorite', isset($favorite[0]['value']) ? $favorite[0]['value'] : 0);
+
+    $fields = field_info_instances('node', $node->type);
+
+    foreach($fields as $field_name => $field) {
+      // Ignore favorite field.
+      if ($field_name == 'field_favorite' || strpos($field_name, 'field_') !== 0) {
+        continue;
+      }
+
+      $field_info = field_info_field($field_name);
+      if ($field_content = field_get_items('node', $node, $field_name)) {
+
+        $key = substr($field_name, 6);
+
+        $param = $action->addChild('param');
+        $param->addAttribute('key', $key);
+
+        switch ($field_info['type']) {
+          case 'image':
+              $param->addAttribute('picture', file_create_url($field_content[0]['uri']));
+            break;
+
+          default:
+            $param->addAttribute('value', $field_content[0]['value']);
+            break;
+        }
+      }
+    }
+  }
+
+  // Add scenes to XML.
+  $snids = db_query("SELECT nid FROM {node} WHERE type = 'sequence'")->fetchCol();
+  $sequences = $xml->addChild('sequences');
+  foreach (node_load_multiple($snids) as $node) {
+    $sequence = $sequences->addChild('sequence');
+    $sequence->addAttribute('id', $node->nid);
+    $sequence->addAttribute('name', $node->title);
+    if ($picture = field_get_items('node', $node, 'field_picture')) {
+      $sequence->addAttribute('icon', file_create_url($picture[0]['uri']));
+    }
+    if ($command = field_get_items('node', $node, 'field_command')) {
+      $sequence->addAttribute('command', file_create_url($command[0]['value']));
+    }
+    if ($actions = field_get_items('node', $node, 'field_actions')) {
+      foreach ($actions as $action) {
+        $sequence->addChild('actionRef', $action['nid']);
+      }
+    }
+  }
 
   // Add presentations to XML.
   $pnids = db_query("SELECT nid FROM {node} WHERE type = 'presentation'")->fetchCol();
@@ -25,50 +90,17 @@ function zigpad_export_config() {
     $presentation = $presentations->addChild('presentation');
     $presentation->addAttribute('name', $node->title);
     if ($comment = field_get_items('node', $node, 'field_comment')) {
-      $presentation->addChild('comment', $comment[0]['value']);
+      $presentation->addAttribute('comment', $comment[0]['value']);
     }
-    if ($scenes = field_get_items('node', $node, 'field_scenes')) {
-      $sequence = $presentation->addChild('sceneSequence');
-      foreach ($scenes as $scene) {
-        $sequence->addChild('sceneRef', $scene['nid']);
+    if ($sequences = field_get_items('node', $node, 'field_scenes')) {
+      foreach ($sequences as $sequence) {
+        $presentation->addChild('sequenceRef', $sequence['nid']);
       }
     }
-  } 
-
-
-  // Add scenes to XML.
-  $snids = db_query("SELECT nid FROM {node} WHERE type = 'scene'")->fetchCol();
-  $scenes = $xml->addChild('scenes');
-  foreach (node_load_multiple($snids) as $node) {
-    $scene = $scenes->addChild('scene');
-    $scene->addAttribute('id', $node->nid);
-    $scene->addAttribute('name', $node->title);
-    if ($picture = field_get_items('node', $node, 'field_picture')) {
-      $scene->addChild('picture')->addAttribute('src', file_create_url($picture[0]['uri']));
-    }
-    if ($actions = field_get_items('node', $node, 'field_actions')) {
-      $sequence = $scene->addChild('actionSequence');
-      foreach ($actions as $action) {
-        $sequence->addChild('actionRef', $action['nid']);
-      }
-    }
-  } 
-
-  // Add actions to XML.
-  $anids = db_query("SELECT nid FROM {node} WHERE type = 'action'")->fetchCol();
-  $actions = $xml->addChild('actions');
-  foreach (node_load_multiple($anids) as $node) {
-    $action = $actions->addChild('action');
-    $action->addAttribute('id', $node->nid);
-    $action->addAttribute('name', $node->title);
-    if ($picture = field_get_items('node', $node, 'field_picture')) {
-      $action->addChild('icon')->addAttribute('src', file_create_url($picture[0]['uri']));
-    }
-    if ($command = field_get_items('node', $node, 'field_command')) {
-      $action->addChild('command', $command[0]['value']);
-    }
-    $action->addChild('standardAction', 'false');
   }
+
+  // Allow other modules to alter the XML.
+  drupal_alter('zigpad_export_xml', $xml);
 
   header('Content-Type: application/xml');
   echo $xml->asXML();
