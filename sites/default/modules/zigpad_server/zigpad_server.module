@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * @file
+ * Definitions and hooks for the Zigpad Server configuration module.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function zigpad_server_permission() {
+  return array(
+    'configure zigpad servers' => array(
+      'title' => t('Configure ZigPad Servers'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function zigpad_server_menu() {
+  $items['zigpad/server'] = array(
+    'title' => 'Server configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zigpad_server_config'),
+    'access arguments' => array('configure zigpad servers'),
+    'menu_name' => 'main-menu',
+    'weight' => -10,
+  );
+  return $items;
+}
+
+/**
+ * Form builder callback; display form to configure real and simulation server.
+ */
+function zigpad_server_config() {
+  $envs = array(
+    'real' => t('Real'),
+    'simulator' => t('Simulation'),
+  );
+  foreach ($envs as $key => $name) {
+    $form[$key] = array(
+      '#type' => 'fieldset',
+      '#title' => $name,
+      '#collapsible' => TRUE,
+      // Only collapse the simulator fieldset.
+      '#collapsed' => $key == 'simulator',
+    );
+
+    $form[$key]['zigpad_server_' . $key . '_ip'] = array(
+      '#type' => 'textfield',
+      '#title' => t('@env IP', array('@env' => $name)),
+      '#size' => 20,
+      '#default_value' => variable_get('zigpad_server_' . $key . '_ip', '192.168.4.99'),
+      '#required' => TRUE,
+    );
+
+    $form[$key]['zigpad_server_' . $key . '_port'] = array(
+      '#type' => 'textfield',
+      '#title' => t('@env Port', array('@env' => $name)),
+      '#size' => 6,
+      '#default_value' => variable_get('zigpad_server_' . $key . '_port', '8005'),
+      '#required' => TRUE,
+    );
+  }
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_zigpad_export_xml_alter().
+ */
+function zigpad_server_zigpad_export_xml_alter($xml) {
+  $servers = $xml->addChild('serverConfig');
+  $envs = array(
+    'real' => t('Real'),
+    'simulator' => t('Simulation'),
+  );
+  foreach ($envs as $key => $name) {
+    $server = $servers->addchild('server');
+    $server->addAttribute('type', $key);
+    $server->addAttribute('ip', variable_get('zigpad_server_' . $key . '_ip', '192.168.4.99'));
+    $server->addAttribute('port', variable_get('zigpad_server_' . $key . '_port', '8005'));
+  }
+}
