@@ -78,7 +78,9 @@ function zigpad_export_config() {
     }
     if ($actions = field_get_items('node', $node, 'field_actions')) {
       foreach ($actions as $action) {
-        $sequence->addChild('actionRef', $action['nid']);
+        $sequence
+          ->addChild('actionRef')
+          ->addAttribute('ref', $action['nid']);
       }
     }
   }
@@ -88,13 +90,16 @@ function zigpad_export_config() {
   $presentations = $xml->addChild('presentations');
   foreach (node_load_multiple($pnids) as $node) {
     $presentation = $presentations->addChild('presentation');
+    $presentation->addAttribute('id', $node->nid);
     $presentation->addAttribute('name', $node->title);
     if ($comment = field_get_items('node', $node, 'field_comment')) {
       $presentation->addAttribute('comment', $comment[0]['value']);
     }
     if ($sequences = field_get_items('node', $node, 'field_scenes')) {
       foreach ($sequences as $sequence) {
-        $presentation->addChild('sequenceRef', $sequence['nid']);
+        $presentation
+          ->addChild('sequenceRef')
+          ->addAttribute('ref', $sequence['nid']);
       }
     }
   }
