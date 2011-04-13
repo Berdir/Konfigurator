@@ -52,7 +52,9 @@ function zigpad_export_config() {
 
         switch ($field_info['type']) {
           case 'image':
-              $param->addAttribute('picture', file_create_url($field_content[0]['uri']));
+              // Get image style from zigpad_export view mode.
+              $image_style = $field['display']['zigpad_export']['settings']['image_style'];
+              $param->addAttribute('picture', image_style_url($image_style, $field_content[0]['uri']));
             break;
 
           default:
@@ -71,7 +73,9 @@ function zigpad_export_config() {
     $sequence->addAttribute('id', $node->nid);
     $sequence->addAttribute('name', $node->title);
     if ($picture = field_get_items('node', $node, 'field_picture')) {
-      $sequence->addAttribute('icon', file_create_url($picture[0]['uri']));
+      $field = field_info_instance('node', 'field_picture', $node->type); 
+      $image_style = $field['display']['zigpad_export']['settings']['image_style'];
+      $sequence->addAttribute('icon', image_style_url($image_style, $picture[0]['uri']));
     }
     if ($command = field_get_items('node', $node, 'field_command')) {
       $sequence->addAttribute('command', file_create_url($command[0]['value']));
@@ -109,4 +113,17 @@ function zigpad_export_config() {
 
   header('Content-Type: application/xml');
   echo $xml->asXML();
+}
+
+/**
+ * Implements hook_entity_info()
+ */
+function zigpad_export_entity_info() {
+  $return['node']['view modes'] = array(
+    'zigpad_export' => array(
+      'label' => t('ZigPad Export'),
+      'custom settings' => TRUE,
+    ),
+  );
+  return $return;
 }
