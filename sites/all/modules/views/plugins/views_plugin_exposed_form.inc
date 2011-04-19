@@ -138,6 +138,7 @@ class views_plugin_exposed_form extends views_plugin {
         if (isset($exposed_data['sort_order']) && in_array($exposed_data['sort_order'], array('ASC', 'DESC'))) {
           $handler->options['order'] = $exposed_data['sort_order'];
         }
+        $handler->set_relationship();
         $handler->query();
         foreach ($view->sort as $sort) {
           if (!$sort->is_exposed()) {
@@ -189,6 +190,12 @@ class views_plugin_exposed_form extends views_plugin {
         $first_sort = reset($this->view->sort);
         $default_sort_order = $first_sort->options['order'];
       }
+
+      if (!isset($form_state['input']['sort_by'])) {
+        $keys = array_keys($exposed_sorts);
+        $form_state['input']['sort_by'] = array_shift($keys);
+      }
+
       $form['sort_order'] = array(
         '#type' => 'select',
         '#options' => $sort_order,
