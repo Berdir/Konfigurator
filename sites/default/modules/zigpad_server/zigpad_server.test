@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * ZigPad Server configuration tests
+ */
+class ZigPadServerTests extends DrupalWebTestCase {
+
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('ZigPad server configuration'),
+      'description' => t('Test the configuration and configuration export of the ZigPad server configuration'),
+      'group' => t('ZigPad'),
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('zigpad_export', 'zigpad_server');
+  }
+
+  /**
+   * Test configuration and export of the server configuration.
+   */
+  function testConfigurationAndExport() {
+    // Create admin user and log in.
+    $admin = $this->drupalCreateUser(array('configure zigpad servers'));
+    $this->drupalLogin($admin);
+
+    // Update server configuration.
+    $config = array(
+      'zigpad_server_real_ip' => $this->randomName(),
+      'zigpad_server_real_port' => $this->randomName(5),
+      'zigpad_server_simulator_ip' => $this->randomName(),
+      'zigpad_server_simulator_port' => $this->randomName(5),
+    );
+    $this->drupalPost('zigpad/server', $config, t('Save configuration'));
+
+    // Get configuration export.
+    $this->drupalGet('1/zigpad/config.xml');
+
+    // Assert real server ip and port.
+    $real_server = array_shift($this->xpath("//server[@type='real']"));
+    $this->assertEqual($real_server['ip'], $config['zigpad_server_real_ip'], t('ZigPad real server IP is correctly exported.'));
+    $this->assertEqual($real_server['port'], $config['zigpad_server_real_port'], t('ZigPad real server Port is correctly exported.'));
+
+    // Assert sim server ip and port.
+    $sim_server = array_shift($this->xpath("//server[@type='simulator']"));
+    $this->assertEqual($sim_server['ip'], $config['zigpad_server_simulator_ip'], t('ZigPad Sim server IP is correctly exported.'));
+    $this->assertEqual($sim_server['port'], $config['zigpad_server_simulator_port'], t('ZigPad Sim server port is correctly exported.'));
+  }
+}

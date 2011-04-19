@@ -2,3 +2,4 @@ name=ZigPad Server configuration
 package=ZigPad
 core=7.x
 version=7.x-1.x
+files[]=zigpad_server.test
