@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ZigPad Presentations feature.
+ */
+
+include_once('zigpad_presentations.features.inc');
