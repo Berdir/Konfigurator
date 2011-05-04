@@ -354,6 +354,7 @@ class views_handler_field extends views_handler {
         'absolute' => array('default' => '', 'translatable' => FALSE),
         'external' => array('default' => '', 'translatable' => FALSE),
         'replace_spaces' => array('default' => '', 'translatable' => FALSE),
+        'trim_whitespace' => array('default' => FALSE),
         'alt' => array('default' => '', 'translatable' => TRUE),
         'rel' => array('default' => ''),
         'link_class' => array('default' => ''),
@@ -765,7 +766,6 @@ If you would like to have the characters %5B and %5D please use the html entity 
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#value' => $output,
-        '#id' => 'views-tokens-help',
         '#dependency' => array(
           'edit-options-alter-make-link' => array(1),
           'edit-options-alter-alter-text' => array(1),
@@ -1211,7 +1211,9 @@ If you would like to have the characters %5B and %5D please use the html entity 
       else {
         $tokens["[$field]"] = '';
       }
-      $this->add_self_tokens($tokens, $item);
+      if (!empty($item)) {
+        $this->add_self_tokens($tokens, $item);
+      }
 
       // We only use fields up to (and including) this one.
       if ($field == $this->options['id']) {
