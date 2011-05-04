@@ -41,6 +41,27 @@ function zigpad_presentations_image_default_styles() {
     ),
   );
 
+  // Exported image style: favorite_icon
+  $styles['favorite_icon'] = array(
+    'name' => 'favorite_icon',
+    'effects' => array(
+      6 => array(
+        'label' => 'Scale and crop',
+        'help' => 'Scale and crop will maintain the aspect-ratio of the original image, then crop the larger dimension. This is most useful for creating perfectly square thumbnails without stretching the image.',
+        'effect callback' => 'image_scale_and_crop_effect',
+        'form callback' => 'image_resize_form',
+        'summary theme' => 'image_resize_summary',
+        'module' => 'image',
+        'name' => 'image_scale_and_crop',
+        'data' => array(
+          'width' => '114',
+          'height' => '114',
+        ),
+        'weight' => '1',
+      ),
+    ),
+  );
+
   // Exported image style: image_fullscreen
   $styles['image_fullscreen'] = array(
     'name' => 'image_fullscreen',
@@ -128,6 +149,14 @@ function zigpad_presentations_node_info() {
       'name' => t('Video Action'),
       'base' => 'node_content',
       'description' => t('Is a Action type of Video Streams. '),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'webcam_action' => array(
+      'name' => t('WebCam Action'),
+      'base' => 'node_content',
+      'description' => '',
       'has_title' => '1',
       'title_label' => t('Title'),
       'help' => '',

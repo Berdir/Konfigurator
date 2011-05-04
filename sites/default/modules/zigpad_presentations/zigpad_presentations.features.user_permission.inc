@@ -88,6 +88,16 @@ function zigpad_presentations_user_default_permissions() {
     'module' => 'node',
   );
 
+  // Exported permission: create webcam_action content
+  $permissions['create webcam_action content'] = array(
+    'name' => 'create webcam_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
   // Exported permission: edit any command_action content
   $permissions['edit any command_action content'] = array(
     'name' => 'edit any command_action content',
@@ -147,6 +157,16 @@ function zigpad_presentations_user_default_permissions() {
     'module' => 'node',
   );
 
+  // Exported permission: edit any webcam_action content
+  $permissions['edit any webcam_action content'] = array(
+    'name' => 'edit any webcam_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
   // Exported permission: edit own command_action content
   $permissions['edit own command_action content'] = array(
     'name' => 'edit own command_action content',
@@ -199,6 +219,16 @@ function zigpad_presentations_user_default_permissions() {
   // Exported permission: edit own video_action content
   $permissions['edit own video_action content'] = array(
     'name' => 'edit own video_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: edit own webcam_action content
+  $permissions['edit own webcam_action content'] = array(
+    'name' => 'edit own webcam_action content',
     'roles' => array(
       0 => 'Configurator',
       1 => 'administrator',
