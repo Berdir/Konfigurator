@@ -1,0 +1,272 @@
+<?php
+
+/**
+ * @file
+ * Tests for the configuration export.
+ */
+
+class ZigPadExportTestCase extends DrupalWebTestCase {
+
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('ZigPad configuration export'),
+      'description' => t('Test the export of presentations, sequences and actions.'),
+      'group' => t('ZigPad'),
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('zigpad_export', 'zigpad_presentations');
+  }
+
+  /**
+   * Tests creating a presentation and export it.
+   */
+  function testBasicExample() {
+    $permissions = array('administer nodes', 'bypass node access');
+    foreach (array('presentation', 'sequence', 'command_action', 'image_action', 'video_action') as $type) {
+      $permissions[] = "create $type content";
+    }
+
+    $admin = $this->drupalCreateUser($permissions);
+
+    $this->drupalLogin($admin);
+
+    $test_image = current($this->drupalGetTestFiles('image'));
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'files[field_picture_und_0]' => drupal_realpath($test_image->uri),
+      'field_favorite[und][0][value]' => 3,
+      'files[field_favorite_icon_und_0]' => drupal_realpath($test_image->uri),
+      'field_command[und][0][value]' => $this->randomName(10),
+    );
+    $command1 = $this->createNode('command-action', $edit);
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'files[field_picture_und_0]' => drupal_realpath($test_image->uri),
+      'field_stay[und]' => TRUE,
+      'field_command[und][0][value]' => $this->randomName(10),
+    );
+    $command2 = $this->createNode('command-action', $edit);
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'files[field_picture_und_0]' => drupal_realpath($test_image->uri),
+      'field_favorite[und][0][value]' => 5,
+    );
+    $image1 = $this->createNode('image-action', $edit);
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'field_url[und][0][value]' => $this->randomName(50),
+    );
+    $image2 = $this->createNode('image-action', $edit);
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'field_url[und][0][value]' => $this->randomName(50),
+    );
+    $video = $this->createNode('video-action', $edit);
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'files[field_picture_und_0]' => drupal_realpath($test_image->uri),
+      'field_command[und][0][value]' => $this->randomName(10),
+    );
+    $sequence1 = $this->createNode('sequence', $edit, array($command1, $image1, $image2));
+
+    $edit = array(
+      'title' => $this->randomName(10),
+      'files[field_picture_und_0]' => drupal_realpath($test_image->uri),
+      'field_command[und][0][value]' => $this->randomName(10),
+    );
+    $sequence2 = $this->createNode('sequence', $edit, array($command2, $video));
+
+    $edit = array(
+      'title' => $this->randomName(10),
+    );
+    $presentation1 = $this->createNode('presentation', $edit, array(), array($sequence2, $sequence1));
+
+    // List them in the website.
+    $this->drupalGet('presentations');
+    $presentation_xml = current($this->xpath('//tbody/tr'));
+    $this->assertEqual($this->extractValue($presentation_xml->td[0]), $presentation1->title);
+    $this->assertEqual($this->extractValue($presentation_xml->td[2]), $sequence2->title . ', ' . $sequence1->title);
+
+    $this->drupalGet('sequences');
+    $this->assertText($sequence1->title);
+    $this->assertText($sequence2->title);
+
+    $this->drupalGet('actions');
+    $actions = $this->xpath('//tbody/tr');
+    $this->assertText($command1->title);
+    $this->assertText($command2->title);
+    $this->assertText($image1->title);
+    $this->assertText($image2->title);
+    $this->assertText($video->title);
+
+    $this->drupalGet('favorites');
+    $favorites = $this->xpath('//tbody/tr');
+    $favorite = $favorites[0];
+    $this->assertEqual($this->extractValue($favorite->td[0]), t('Image Action'));
+    $this->assertEqual($this->extractValue($favorite->td[2]), 5);
+    $this->assertEqual($this->extractValue($favorite->td[3]), $image1->title);
+
+    $favorite = $favorites[1];
+    $this->assertEqual($this->extractValue($favorite->td[0]), t('Command Action'));
+    $this->assertEqual($this->extractValue($favorite->td[2]), 3);
+    $this->assertEqual($this->extractValue($favorite->td[3]), $command1->title);
+
+    $this->drupalGet('1/zigpad/config.xml');
+    $actions = $this->xpath('//action');
+    foreach ($actions as $action) {
+      switch ($action['id']) {
+        case $command1->nid:
+          $this->assertEqual((string)$action['name'], $command1->title);
+          $this->assertEqual((string)$action['type'], 'command');
+          $this->assertEqual((string)$action['favorite'], 3);
+
+          $params = array(
+            'command' => array('value' => $command1->field_command['und'][0]['value']),
+            'favorite_icon' => array('picture' => image_style_url('favorite_icon', $command1->field_favorite_icon['und'][0]['uri'])),
+            'picture' => array('picture' => image_style_url('command_image', $command1->field_picture['und'][0]['uri'])),
+          );
+          $this->assertParams($action->param, $params);
+          break;
+
+        case $command2->nid:
+          $this->assertEqual((string)$action['name'], $command2->title);
+          $this->assertEqual((string)$action['type'], 'command');
+          $this->assertEqual((string)$action['favorite'], 0);
+
+          $params = array(
+            'command' => array('value' => $command2->field_command['und'][0]['value']),
+            'picture' => array('picture' => image_style_url('command_image', $command2->field_picture['und'][0]['uri'])),
+          );
+          $this->assertParams($action->param, $params);
+          break;
+
+        case $image1->nid:
+          $this->assertEqual((string)$action['name'], $image1->title);
+          $this->assertEqual((string)$action['type'], 'image');
+          $this->assertEqual((string)$action['favorite'], 5);
+
+          $params = array(
+            'picture' => array('picture' => image_style_url('image_fullscreen', $image1->field_picture['und'][0]['uri'])),
+          );
+          $this->assertParams($action->param, $params);
+          break;
+
+        case $image2->nid:
+          $this->assertEqual((string)$action['name'], $image2->title);
+          $this->assertEqual((string)$action['type'], 'image');
+          $this->assertEqual((string)$action['favorite'], 0);
+
+          $params = array(
+            'url' => array('value' => $image2->field_url['und'][0]['value']),
+          );
+          $this->assertParams($action->param, $params);
+          break;
+
+        case $video->nid:
+          $this->assertEqual((string)$action['name'], $video->title);
+          $this->assertEqual((string)$action['type'], 'video');
+          $this->assertEqual((string)$action['favorite'], 0);
+
+          $params = array(
+            'url' => array('value' => $video->field_url['und'][0]['value']),
+          );
+          $this->assertParams($action->param, $params);
+          break;
+      }
+    }
+
+    $sequences = $this->xpath('//sequence');
+    foreach ($sequences as $sequence) {
+      switch ($sequence['id']) {
+        case $sequence1->nid:
+          $this->assertEqual((string)$sequence['name'], $sequence1->title);
+          $this->assertEqual((string)$sequence['icon'], image_style_url('sequence', $sequence1->field_picture['und'][0]['uri']));
+          $this->assertEqual((string)$sequence['command'], $sequence1->field_command['und'][0]['value']);
+
+          $actionRefs = array();
+          foreach ($sequence->actionref as $actionRef) {
+            $actionRefs[] = (string)$actionRef['ref'];
+          }
+          $this->assertEqual($actionRefs, array($command1->nid, $image1->nid, $image2->nid));
+          break;
+
+        case $sequence2->nid:
+          $this->assertEqual((string)$sequence['name'], $sequence2->title);
+          $this->assertEqual((string)$sequence['icon'], image_style_url('sequence', $sequence2->field_picture['und'][0]['uri']));
+          $this->assertEqual((string)$sequence['command'], $sequence2->field_command['und'][0]['value']);
+
+          $actionRefs = array();
+          foreach ($sequence->actionref as $actionRef) {
+            $actionRefs[] = (string)$actionRef['ref'];
+          }
+          $this->assertEqual($actionRefs, array($command2->nid, $video->nid));
+          break;
+      }
+    }
+
+    $presentation = current($this->xpath('//presentation'));
+    $this->assertEqual((string)$presentation['name'], $presentation1->title);
+
+    $sequenceRefs = array();
+    foreach ($presentation->sequenceref as $sequenceRef) {
+      $sequenceRefs[] = (string)$sequenceRef['ref'];
+    }
+    $this->assertEqual($sequenceRefs, array($sequence2->nid, $sequence1->nid));
+  }
+
+  function assertParams(SimpleXMLElement $xml_params, $params) {
+    foreach ($xml_params as $xml) {
+      $key = (string)$xml['key'];
+      if (isset($params[$key])) {
+        foreach ($params[$key] as $attribute => $value) {
+          $this->assertEqual((string)$xml[$attribute], $value);
+        }
+        unset($params[$key]);
+      }
+    }
+    if (!empty($params)) {
+      $this->fail('Not all expected params were found');
+      debug($params);
+    }
+  }
+
+  function createNode($type, $edit, $actions = array(), $sequences = array()) {
+
+    $this->drupalGet('node/add/' . $type);
+    $i = 0;
+    foreach ($actions as $action) {
+      $edit["field_actions[und][$i][nid]"] = $action->title . ' [nid:' . $action->nid . ']';
+      $this->drupalPost(NULL, array(), t('Add another item'));
+      $i++;
+    }
+
+    $i = 0;
+    foreach ($sequences as $sequence) {
+      $edit["field_scenes[und][$i][nid]"] = $sequence->title . ' [nid:' . $sequence->nid . ']';
+      $this->drupalPost(NULL, array(), t('Add another item'));
+      $i++;
+    }
+
+    $this->drupalPost(NULL, $edit, t('Save'));
+    preg_match('/node\/([0-9]+)/', $this->getUrl(), $matches);
+    return node_load($matches[1]);
+  }
+
+  function extractValue(SimpleXMLElement $element) {
+    return trim(strip_tags($element->asXML()));
+  }
+}
