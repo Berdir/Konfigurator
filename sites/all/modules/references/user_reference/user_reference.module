@@ -9,12 +9,12 @@
  * Implements hook_menu().
  */
 function user_reference_menu() {
-  $items = array();
-  $items['user_reference/autocomplete'] = array(
-    'title' => 'user_reference autocomplete',
+  $items['user_reference/autocomplete/%/%/%'] = array(
     'page callback' => 'user_reference_autocomplete',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK
+    'page arguments' => array(2, 3, 4),
+    'access callback' => 'reference_autocomplete_access',
+    'access arguments' => array(2, 3, 4),
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -163,8 +163,11 @@ function _user_reference_view_settings_validate($element, &$form_state, $form) {
     $display = '';
   }
 
-  // Explode the 'args' string into an actual array.
-  $args = array_map('trim', explode(',', $element['args']['#value']));
+  // Explode the 'args' string into an actual array. Beware, explode() turns an
+  // empty string into an array with one empty string. We'll need an empty array
+  // instead.
+  $args_string = trim($element['args']['#value']);
+  $args = ($args_string === '') ? array() : array_map('trim', explode(',', $args_string));
 
   $value = array('view_name' => $view, 'display_name' => $display, 'args' => $args);
   form_set_value($element, $value, $form_state);
@@ -200,7 +203,7 @@ function user_reference_field_validate($entity_type, $entity, $field, $instance,
     $options = array(
       'ids' => $ids,
     );
-    $refs = _user_reference_potential_references($field, $options);
+    $refs = user_reference_potential_references($field, $options);
     foreach ($items as $delta => $item) {
       if (is_array($item)) {
         if (!empty($item['uid']) && !isset($refs[$item['uid']])) {
@@ -379,7 +382,7 @@ function user_reference_field_widget_form(&$form, &$form_state, $field, $instanc
       $element += array(
         '#type' => 'textfield',
         '#default_value' => isset($items[$delta]['uid']) ? $items[$delta]['uid'] : NULL,
-        '#autocomplete_path' => $instance['widget']['settings']['autocomplete_path'] . '/' . $field['field_name'],
+        '#autocomplete_path' => $instance['widget']['settings']['autocomplete_path'] . '/' . $instance['entity_type'] . '/' . $instance['bundle'] . '/' . $field['field_name'],
         '#size' => $instance['widget']['settings']['size'],
         '#element_validate' => array('user_reference_autocomplete_validate'),
         '#value_callback' => 'user_reference_autocomplete_value',
@@ -446,7 +449,7 @@ function user_reference_autocomplete_validate($element, &$form_state, $form) {
         'match' => 'equals',
         'limit' => 1,
       );
-      $references = _user_reference_potential_references($field, $options);
+      $references = user_reference_potential_references($field, $options);
       if ($references) {
         // @todo The best thing would be to present the user with an
         // additional form, allowing the user to choose between valid
@@ -486,7 +489,7 @@ function user_reference_field_widget_error($element, $error, $form, &$form_state
  *   An array of referenceable user names, keyed by user id.
  */
 function _user_reference_options($field) {
-  $references = _user_reference_potential_references($field);
+  $references = user_reference_potential_references($field);
 
   $options = array();
   foreach ($references as $key => $value) {
@@ -528,7 +531,7 @@ function _user_reference_options($field) {
  *     ...
  *   )
  */
-function _user_reference_potential_references($field, $options = array()) {
+function user_reference_potential_references($field, $options = array()) {
   // Fill in default options.
   $options += array(
     'string' => '',
@@ -561,7 +564,7 @@ function _user_reference_potential_references($field, $options = array()) {
 }
 
 /**
- * Helper function for _user_reference_potential_references().
+ * Helper function for user_reference_potential_references().
  *
  * Case of Views-defined referenceable users.
  */
@@ -572,7 +575,7 @@ function _user_reference_potential_references_views($field, $options) {
 }
 
 /**
- * Helper function for _user_reference_potential_references().
+ * Helper function for user_reference_potential_references().
  *
  * List of referenceable users defined by user role and status.
  */
@@ -644,16 +647,16 @@ function _user_reference_potential_references_standard($field, $options) {
 /**
  * Menu callback; Retrieve a pipe delimited string of autocomplete suggestions for existing users
  */
-function user_reference_autocomplete($field_name, $string = '') {
+function user_reference_autocomplete($entity_type, $bundle, $field_name, $string = '') {
   $field = field_info_field($field_name);
+  $instance = field_info_instance($entity_type, $field_name, $bundle);
 
   $options = array(
     'string' => $string,
-    // @todo broken - this is in $field['widget']['settings']['autocomplete_match'] - we'd need the $instance.
-    'match' => isset($field['widget']['autocomplete_match']) ? $field['widget']['autocomplete_match'] : 'contains',
+    'match' => $instance['widget']['settings']['autocomplete_match'],
     'limit' => 10,
   );
-  $references = _user_reference_potential_references($field, $options);
+  $references = user_reference_potential_references($field, $options);
 
   $matches = array();
   foreach ($references as $id => $row) {

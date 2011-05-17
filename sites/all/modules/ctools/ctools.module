@@ -439,18 +439,6 @@ function ctools_flush_caches() {
 }
 
 /**
- * Provide a search form with a different id so that form_alters will miss it
- * and thus not get advanced search settings.
- */
-function ctools_forms() {
-  $forms['ctools_search_form']= array(
-    'callback' => 'search_form',
-  );
-
-  return $forms;
-}
-
-/**
  * Implements hook_element_info_alter().
  *
  */
@@ -519,11 +507,11 @@ function ctools_ctools_plugin_type() {
  * templates based upon input when the panel was configured.
  */
 function ctools_preprocess_node(&$vars) {
-  // The 'panel_identifier' attribute of the node is added when the pane is
+  // The 'ctools_template_identifier' attribute of the node is added when the pane is
   // rendered.
-  if (!empty($vars['node']->panel_identifier)) {
-    $vars['panel_identifier'] = check_plain($vars['node']->panel_identifier);
-    $vars['template_files'][] = 'node-panel-' . check_plain($vars['node']->panel_identifier);
+  if (!empty($vars['node']->ctools_template_identifier)) {
+    $vars['ctools_template_identifier'] = check_plain($vars['node']->ctools_template_identifier);
+    $vars['theme_hook_suggestions'][] = 'node__panel__' . check_plain($vars['node']->ctools_template_identifier);
   }
 }
 
@@ -813,9 +801,6 @@ function ctools_ctools_entity_context_alter(&$plugin, &$entity, $plugin_id) {
       $plugin = ctools_get_context('user');
       unset($plugin['no ui']);
       unset($plugin['no required context ui']);
-      break;
-    case 'entity_from_schema:uid-node-user':
-      $plugin['title'] = t('Node author');
       break;
   }
 

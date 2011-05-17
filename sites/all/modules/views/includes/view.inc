@@ -1618,6 +1618,7 @@ class view extends views_db_object {
    */
   function export($indent = '') {
     $this->init_display();
+    $this->init_query();
     $output = '';
     $output .= $this->export_row('view', $indent);
     // Set the API version
@@ -2256,6 +2257,13 @@ class views_db_object {
  * to the behavior of the display at all.
  */
 class views_display extends views_db_object {
+  /**
+   * The display handler itself, which has all the methods.
+   *
+   * @var views_plugin_display
+   */
+  var $handler;
+
   var $db_table = 'views_display';
   function views_display($init = TRUE) {
     parent::init($init);

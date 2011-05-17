@@ -69,8 +69,8 @@ class views_handler_field_field extends views_handler_field {
    * Return TRUE if the user has access to view this field.
    */
   function access() {
-    $this->get_base_table();
-    return field_access('view', $this->definition['field_name'], $this->definition['entity_tables'][$this->base_table]);
+    $base_table = $this->get_base_table();
+    return field_access('view', $this->field_info, $this->definition['entity_tables'][$base_table]);
   }
 
   /**
@@ -586,8 +586,8 @@ class views_handler_field_field extends views_handler_field {
       }
 
       // Now, transfer the data back into the resultset so it can be easily used.
-      foreach ($values as $key => &$value) {
-        $value->{'field_' . $this->options['id']} = $this->set_items($value);
+      foreach ($values as $row_id => &$value) {
+        $value->{'field_' . $this->options['id']} = $this->set_items($value, $row_id);
       }
     }
   }
@@ -625,7 +625,7 @@ class views_handler_field_field extends views_handler_field {
   /**
    * Return an array of items for the field.
    */
-  function set_items($values) {
+  function set_items($values, $row_id) {
     if (empty($values->_field_data[$this->field_alias]) || empty($values->_field_data[$this->field_alias]['entity'])) {
       return array();
     }
@@ -705,8 +705,11 @@ class views_handler_field_field extends views_handler_field {
       'type' => $this->options['type'],
       'settings' => $this->options['settings'],
       'label' => 'hidden',
+      // Pass the View object in the display so that fields can act on it.
+      'views_view' => $this->view,
+      'views_field' => $this,
+      'views_row_id' => $row_id,
     );
-
 
     $render_array = field_view_field($entity_type, $entity, $this->definition['field_name'], $display, $langcode);
 
