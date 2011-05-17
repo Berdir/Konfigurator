@@ -124,6 +124,10 @@ function zigpad_export_entity_info() {
       'label' => t('ZigPad Export'),
       'custom settings' => TRUE,
     ),
+    'zigpad_inline' => array(
+      'label' => t('ZigPad Inline'),
+      'custom settings' => TRUE,
+    ),
   );
   return $return;
 }
