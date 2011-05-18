@@ -29,12 +29,19 @@ function zigpad_presentations_views_default_views() {
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
+    'type' => 'type',
     'entity_id' => 'entity_id',
     'title' => 'title',
     'edit_node' => 'edit_node',
   );
-  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['default'] = 'title';
   $handler->display->display_options['style_options']['info'] = array(
+    'type' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+    ),
     'entity_id' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
@@ -42,7 +49,7 @@ function zigpad_presentations_views_default_views() {
       'separator' => '',
     ),
     'title' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
@@ -54,6 +61,7 @@ function zigpad_presentations_views_default_views() {
   );
   $handler->display->display_options['style_options']['override'] = 1;
   $handler->display->display_options['style_options']['sticky'] = 0;
+  $handler->display->display_options['style_options']['empty_table'] = 0;
   /* Field: Content: Type */
   $handler->display->display_options['fields']['type']['id'] = 'type';
   $handler->display->display_options['fields']['type']['table'] = 'node';
@@ -162,6 +170,40 @@ function zigpad_presentations_views_default_views() {
     'video_action' => 'video_action',
     'webcam_action' => 'webcam_action',
   );
+  $handler->display->display_options['filters']['type']['expose']['operator_id'] = 'type_op';
+  $handler->display->display_options['filters']['type']['expose']['label'] = 'Type';
+  $handler->display->display_options['filters']['type']['expose']['operator'] = 'type_op';
+  $handler->display->display_options['filters']['type']['expose']['identifier'] = 'type';
+  $handler->display->display_options['filters']['type']['expose']['reduce'] = 1;
+  /* Filter criterion: Name */
+  $handler->display->display_options['filters']['title']['id'] = 'title';
+  $handler->display->display_options['filters']['title']['table'] = 'node';
+  $handler->display->display_options['filters']['title']['field'] = 'title';
+  $handler->display->display_options['filters']['title']['ui_name'] = 'Name';
+  $handler->display->display_options['filters']['title']['operator'] = 'contains';
+  $handler->display->display_options['filters']['title']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['title']['expose']['operator_id'] = 'title_op';
+  $handler->display->display_options['filters']['title']['expose']['label'] = 'Title';
+  $handler->display->display_options['filters']['title']['expose']['operator'] = 'title_op';
+  $handler->display->display_options['filters']['title']['expose']['identifier'] = 'name';
+  $handler->display->display_options['filters']['title']['expose']['required'] = FALSE;
+  $handler->display->display_options['filters']['title']['expose']['multiple'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type_1']['id'] = 'type_1';
+  $handler->display->display_options['filters']['type_1']['table'] = 'node';
+  $handler->display->display_options['filters']['type_1']['field'] = 'type';
+  $handler->display->display_options['filters']['type_1']['value'] = array(
+    'command_action' => 'command_action',
+    'image_action' => 'image_action',
+    'video_action' => 'video_action',
+    'webcam_action' => 'webcam_action',
+  );
+  $handler->display->display_options['filters']['type_1']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['type_1']['expose']['operator_id'] = 'type_1_op';
+  $handler->display->display_options['filters']['type_1']['expose']['label'] = 'Type';
+  $handler->display->display_options['filters']['type_1']['expose']['operator'] = 'type_1_op';
+  $handler->display->display_options['filters']['type_1']['expose']['identifier'] = 'type_1';
+  $handler->display->display_options['filters']['type_1']['expose']['reduce'] = 1;
   $handler->display->display_options['path'] = 'actions';
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'Actions';
@@ -300,6 +342,7 @@ function zigpad_presentations_views_default_views() {
     t('Name'),
     t('Edit'),
     t('Page'),
+    t('Title'),
     t('Favorites'),
     t('Favorite'),
   );
@@ -384,10 +427,11 @@ function zigpad_presentations_views_default_views() {
   $handler->display->display_options['fields']['entity_id']['element_default_classes'] = 1;
   $handler->display->display_options['fields']['entity_id']['hide_empty'] = 0;
   $handler->display->display_options['fields']['entity_id']['empty_zero'] = 0;
-  /* Field: Content: Scenes */
+  /* Field: Content: Sequences */
   $handler->display->display_options['fields']['field_scenes']['id'] = 'field_scenes';
   $handler->display->display_options['fields']['field_scenes']['table'] = 'field_data_field_scenes';
   $handler->display->display_options['fields']['field_scenes']['field'] = 'field_scenes';
+  $handler->display->display_options['fields']['field_scenes']['label'] = 'Scenes';
   $handler->display->display_options['fields']['field_scenes']['alter']['alter_text'] = 0;
   $handler->display->display_options['fields']['field_scenes']['alter']['make_link'] = 0;
   $handler->display->display_options['fields']['field_scenes']['alter']['absolute'] = 0;

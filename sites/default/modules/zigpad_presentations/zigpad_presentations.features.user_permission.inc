@@ -98,6 +98,142 @@ function zigpad_presentations_user_default_permissions() {
     'module' => 'node',
   );
 
+  // Exported permission: delete any command_action content
+  $permissions['delete any command_action content'] = array(
+    'name' => 'delete any command_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any image_action content
+  $permissions['delete any image_action content'] = array(
+    'name' => 'delete any image_action content',
+    'roles' => array(
+      0 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any page content
+  $permissions['delete any page content'] = array(
+    'name' => 'delete any page content',
+    'roles' => array(
+      0 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any presentation content
+  $permissions['delete any presentation content'] = array(
+    'name' => 'delete any presentation content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any sequence content
+  $permissions['delete any sequence content'] = array(
+    'name' => 'delete any sequence content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any video_action content
+  $permissions['delete any video_action content'] = array(
+    'name' => 'delete any video_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete any webcam_action content
+  $permissions['delete any webcam_action content'] = array(
+    'name' => 'delete any webcam_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own command_action content
+  $permissions['delete own command_action content'] = array(
+    'name' => 'delete own command_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own image_action content
+  $permissions['delete own image_action content'] = array(
+    'name' => 'delete own image_action content',
+    'roles' => array(
+      0 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own page content
+  $permissions['delete own page content'] = array(
+    'name' => 'delete own page content',
+    'roles' => array(
+      0 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own presentation content
+  $permissions['delete own presentation content'] = array(
+    'name' => 'delete own presentation content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own sequence content
+  $permissions['delete own sequence content'] = array(
+    'name' => 'delete own sequence content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own video_action content
+  $permissions['delete own video_action content'] = array(
+    'name' => 'delete own video_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
+  // Exported permission: delete own webcam_action content
+  $permissions['delete own webcam_action content'] = array(
+    'name' => 'delete own webcam_action content',
+    'roles' => array(
+      0 => 'Configurator',
+      1 => 'administrator',
+    ),
+    'module' => 'node',
+  );
+
   // Exported permission: edit any command_action content
   $permissions['edit any command_action content'] = array(
     'name' => 'edit any command_action content',
