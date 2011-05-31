@@ -58,7 +58,10 @@ function zigpad_export_config() {
             break;
 
           default:
-            $param->addAttribute('value', $field_content[0]['value']);
+            // All fields which have a value (textfield, areas, ..) are simply added as-is.
+            if (isset($field_content[0]['value'])) {
+              $param->addAttribute('value', $field_content[0]['value']);
+            }
             break;
         }
       }
