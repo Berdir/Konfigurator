@@ -74,7 +74,7 @@ function acdx_node_reference_field_widget_form(&$form, &$form_state, $field, $in
       $acdx = array(
         '#type' => 'autocomplete_deluxe',
         '#default_value' => $value,
-        '#autocomplete_path' => url($instance['widget']['settings']['autocomplete_path'] . '/' . $instance['entity_type'] . '/sequence/' . $field['field_name'], array('absolute' => TRUE)),
+        '#autocomplete_path' => url($instance['widget']['settings']['autocomplete_path'] . '/' . $instance['entity_type'] . '/' . $instance['bundle'] . '/' . $field['field_name'], array('absolute' => TRUE)),
         '#size' => $instance['widget']['settings']['size'],
         '#element_validate' => array('node_reference_autocomplete_validate'),
         //TODO: does not work.
