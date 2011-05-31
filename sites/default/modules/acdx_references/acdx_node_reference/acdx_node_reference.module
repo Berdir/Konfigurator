@@ -1,0 +1,89 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_menu().
+ */
+function acdx_node_reference_menu() {
+  $items['acdx_node_reference/autocomplete/%/%/%'] = array(
+    'page callback' => 'acdx_node_reference_autocomplete',
+    'page arguments' => array(2, 3, 4),
+    'access callback' => 'reference_autocomplete_access',
+    'access arguments' => array(2, 3, 4),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Menu callback for the autocomplete results.
+ */
+function acdx_node_reference_autocomplete($entity_type, $bundle, $field_name, $string = '') {
+  $field = field_info_field($field_name);
+  $instance = field_info_instance($entity_type, $field_name, $bundle);
+
+  $options = array(
+    'string' => $string,
+    'match' => $instance['widget']['settings']['autocomplete_match'],
+    'limit' => 200,
+  );
+  $references = node_reference_potential_references($field, $options);
+
+  $matches = array();
+  foreach ($references as $id => $row) {
+    // Markup is fine in autocompletion results (might happen when rendered
+    // through Views) but we want to remove hyperlinks.
+    $suggestion = preg_replace('/<a href="([^<]*)">([^<]*)<\/a>/', '$2', $row['rendered']);
+    // Add a class wrapper for a few required CSS overrides.
+    $matches[$row['title'] . " [nid:$id]"] = '<div class="reference-autocomplete">' . $suggestion . '</div>';
+  }
+
+  drupal_json_output($matches);
+}
+
+
+function acdx_node_reference_field_widget_info() {
+  return array(
+    'node_reference_autocomplete_deluxe' => array(
+      'label'       => t('Autocomplete Deluxe'),
+      'description' => t('Display the list of referenceable nodes as a textfield with autocomplete deluxe behaviour.'),
+      'field types' => array('node_reference'),
+      'settings'    => array(
+        'autocomplete_match' => 'contains',
+        'size' => 60,
+        'autocomplete_path' => 'acdx_node_reference/autocomplete',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function acdx_node_reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  switch ($instance['widget']['type']) {
+    case 'node_reference_autocomplete_deluxe':
+      // Since the value callback doesn't work with autocomplete deluxe, we need
+      // to set the default value here.
+      $value = NULL;
+      if (isset($items[$delta]['nid'])) {
+        $element['#default_value'] = $items[$delta]['nid'];
+        $value = node_reference_autocomplete_value($element, FALSE, $form_state);
+      }
+      
+      $acdx = array(
+        '#type' => 'autocomplete_deluxe',
+        '#default_value' => $value,
+        '#autocomplete_path' => url($instance['widget']['settings']['autocomplete_path'] . '/' . $instance['entity_type'] . '/sequence/' . $field['field_name'], array('absolute' => TRUE)),
+        '#size' => $instance['widget']['settings']['size'],
+        '#element_validate' => array('node_reference_autocomplete_validate'),
+        //TODO: does not work.
+        '#value_callback' => 'node_reference_autocomplete_value',
+      );
+      // Element has already some fields and if we use += values that are
+      // already in $element, won't be overwritten.
+      $element = array_merge($element, $acdx);
+      break;
+  }
+  return array('nid' => $element);
+}

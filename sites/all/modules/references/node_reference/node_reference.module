@@ -810,7 +810,7 @@ function node_reference_autocomplete($entity_type, $bundle, $field_name, $string
   $options = array(
     'string' => $string,
     'match' => $instance['widget']['settings']['autocomplete_match'],
-    'limit' => 10,
+    'limit' => 200,
   );
   $references = node_reference_potential_references($field, $options);
 

@@ -1,0 +1,16 @@
+; $Id$
+name = Autocomplete Deluxe Node References Widget
+description = Autocomplete Deluxe widget implementation for node references.
+package = CCK
+project = acdx_references
+version = VERSION
+core = 7.x
+files[] = acdx_node_reference.module
+dependencies[] = autocomplete_deluxe
+dependencies[] = node_reference
+; Information added by drupal.org packaging script on 2011-04-11
+version = "7.x-1.0-beta1-customized"
+core = "7.x"
+project = "acdx_references"
+datestamp = "2302529314"
+
