@@ -33,6 +33,11 @@ function zigpad_export_config() {
     $action->addAttribute('type', $type);
     $favorite = field_get_items('node', $node, 'field_favorite');
     $action->addAttribute('favorite', isset($favorite[0]['value']) ? $favorite[0]['value'] : 0);
+    
+    // For performance reasons, make sure that there is always a favorite_icon
+    // if the action is a favorite.
+    $needs_favorite_icon = !empty($favorite[0]['value']);
+    $image_uri = NULL;
 
     $fields = field_info_instances('node', $node->type);
 
@@ -47,24 +52,53 @@ function zigpad_export_config() {
 
         $key = substr($field_name, 6);
 
-        $param = $action->addChild('param');
-        $param->addAttribute('key', $key);
-
         switch ($field_info['type']) {
           case 'image':
-              // Get image style from zigpad_export view mode.
-              $image_style = $field['display']['zigpad_export']['settings']['image_style'];
-              $param->addAttribute('picture', image_style_url($image_style, $field_content[0]['uri']));
+            $param = $action->addChild('param');
+            $param->addAttribute('key', $key);
+            
+            // Get image style from zigpad_export view mode.
+            $image_style = $field['display']['zigpad_export']['settings']['image_style'];
+            $param->addAttribute('picture', image_style_url($image_style, $field_content[0]['uri']));
+            
+            if ($needs_favorite_icon) {
+              // Check if this is the favorite_icon image, if yes, set flag that
+              // there is a favorite icon if not, store the image url if there is
+              // none yet.
+              if ($key == 'favorite_icon') {
+                $needs_favorite_icon = FALSE;
+              }
+              elseif (!$image_uri) {
+                $image_uri = $field_content[0]['uri'];
+              }
+            }
+            
             break;
 
           default:
             // All fields which have a value (textfield, areas, ..) are simply added as-is.
             if (isset($field_content[0]['value'])) {
+              
+              // Do not add stay field if it is 0.
+              if ($key == 'stay' && empty($field_content[0]['value'])) {
+                continue;
+              }
+              
+              $param = $action->addChild('param');
+              $param->addAttribute('key', $key);
               $param->addAttribute('value', $field_content[0]['value']);
             }
             break;
         }
       }
+    }
+    
+    // If there needs to be a favorite icon and we have a image uri, add 
+    // hardcoded one.
+    if ($needs_favorite_icon && $image_uri) {
+      $param = $action->addChild('param');
+      $param->addAttribute('key', 'favorite_icon');
+      $param->addAttribute('picture', image_style_url('favorite_icon', $image_uri));
     }
   }
 
